@@ -1,0 +1,6 @@
+[submodule "Zelda64RecompSyms"]
+	path = Zelda64RecompSyms
+	url = https://github.com/Zelda64Recomp/Zelda64RecompSyms
+[submodule "mm-decomp"]
+	path = mm-decomp
+	url = https://github.com/zeldaret/mm

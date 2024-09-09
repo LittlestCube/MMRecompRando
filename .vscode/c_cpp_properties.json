@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Mod",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/include/dummy_headers",
+                "${workspaceFolder}/mm-decomp/include",
+                "${workspaceFolder}/mm-decomp/src",
+                "${workspaceFolder}/mm-decomp/assets"
+            ],
+            "defines": [
+                "F3DEX_GBI_2",
+                "_LANGUAGE_C",
+                "MIPS"
+            ],
+            "compilerPath": "clang",
+            "cStandard": "c99",
+            "intelliSenseMode": "clang-x86"
+        }
+    ],
+    "version": 4
+}
