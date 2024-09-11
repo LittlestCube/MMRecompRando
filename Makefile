@@ -29,8 +29,12 @@ define make_folder
 	mkdir $(subst /,\,$(1))
 endef
 
-$(OUTPUT_NAME_W_VER).dll: build/mod_recompiled.c
+$(OUTPUT_NAME)/$(OUTPUT_NAME_W_VER).dll: build/mod_recompiled.c
+ifeq ($(MANIFEST),)
+	@$(MAKE) --no-print-directory
+else
 	clang-cl build/mod_recompiled.c -fuse-ld=lld -Z7 /Ioffline_build   /MD /O2 /link /DLL /OUT:$@
+endif
 
 else
 
@@ -38,17 +42,18 @@ define make_folder
 	mkdir -p $(1)
 endef
 
-$(OUTPUT_NAME_W_VER).so: build/mod_recompiled.c
+$(OUTPUT_NAME)/$(OUTPUT_NAME_W_VER).so: build/mod_recompiled.c
+ifeq ($(MANIFEST),)
+	@$(MAKE) --no-print-directory
+else
 	clang build/mod_recompiled.c -shared -fvisibility=hidden -fPIC -O2 -Ioffline_build -o $@
+endif
 
 endif
 
 
 build/mod_recompiled.c: $(OUTPUT_NAME)/mod_binary.bin
 	$(OFFLINE_RECOMP) $(OUTPUT_NAME)/mod_syms.bin $(OUTPUT_NAME)/mod_binary.bin Zelda64RecompSyms/mm.us.rev1.syms.toml $@
-ifeq ($(OUTPUT_NAME_W_VER),)
-	@$(MAKE) --no-print-directory
-endif
 
 $(OUTPUT_NAME)/mod_binary.bin: $(TARGET) $(MOD_TOML) | $(OUTPUT_NAME)
 	$(MOD_TOOL) $(MOD_TOML) $(OUTPUT_NAME)
