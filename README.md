@@ -17,19 +17,4 @@ You'll also need to build [N64Recomp](https://github.com/N64Recomp/N64Recomp) fo
 
 ### Building
 * First, run `make` (with an optional job count) to build the mod code itself.
-* Next, run the `RecompModTool` utility with `mod.toml` as the first argument and the build dir (`build` in the case of this template) as the second argument.
-  * This will produce your mod's `.nrm` file in the build folder.
-* Finally, compile your mod offline.
-  * **This part is temporary and only needed while the recomp mod runtime doesn't have LuaJIT recompilation implemented**
-  * Start by running the `OfflineModRecomp` utility (included in the N64Recomp repo). Pass the following arguments: `build/mod_syms.bin build/mod_binary.bin Zelda64RecompSyms/mm.us.rev1.syms.toml build/mod_recompiled.c`
-  * Next, build the dynamic library from the generated `build/mod_recompiled.c` file and pass `offline_build` as an include path.
-    * On Windows, you can run:
-      ```
-      clang-cl build/mod_recompiled.c -fuse-ld=lld -Z7 /Ioffline_build   MD /O2 /link /DLL /OUT:build/mm_recomp_mod_template-1.0.0.dll
-      ```
-      On Linux, you can run:
-      ```
-      clang build/mod_recompiled.c -shared -fvisibility=hidden -fPIC -O2 -Ioffline_build -o build/mm_recomp_mod_template-1.0.0.so
-      ```
-    * Make sure your mod's dynamic library and .nrm file have the same filename (besides the extension).
-      * e.g. `testmod-1.0.0.nrm` and `testmod-1.0.0.dll`
+* Oops, all done.
