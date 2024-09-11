@@ -5,13 +5,13 @@
 
 # Unique ID of this mod. Pick something long enough that it'll never be the same as any other mod.
 # The name displayed in the mod management menu is separate from this so this doesn't need to be human readable.
-id = "mm_recomp_mod_template"
+id = "mm_recomp_rando"
 
 # Version of this mod.
-version = "1.0.0"
+version = "0.2.3"
 
 # Authors of this mod.
-authors = [ "Your name here" ]
+authors = [ "LittleCube", "dcvz", "CelestialKitsune", "VincentsSin" ]
 
 # ID of the target recomp game.
 game_id = "mm"

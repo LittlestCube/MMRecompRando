@@ -1,8 +1,14 @@
 BUILD_DIR := build
+OUTPUT_NAME := mm_recomp_rando
+MOD_TOML := mod.toml
 
 CC      := clang
 LD      := ld.lld
+MOD_TOOL := ./RecompModTool
+OFFLINE_RECOMP := ./OfflineModRecomp
 TARGET  := $(BUILD_DIR)/mod.elf
+MANIFEST := $(wildcard $(OUTPUT_NAME)/$(OUTPUT_NAME)*.nrm)
+OUTPUT_NAME_W_VER := $(notdir $(MANIFEST:.nrm=))
 
 LDSCRIPT := mod.ld
 CFLAGS   := -target mips -mips2 -mabi=32 -O2 -G0 -mno-abicalls -mno-odd-spreg -mno-check-zero-division \
@@ -16,21 +22,51 @@ C_SRCS := $(wildcard src/*.c)
 C_OBJS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.o))
 C_DEPS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.d))
 
-$(TARGET): $(C_OBJS) $(LDSCRIPT) | $(BUILD_DIR)
+
+ifeq ($(OS),Windows_NT)
+
+define make_folder
+	mkdir $(subst /,\,$(1))
+endef
+
+$(OUTPUT_NAME_W_VER).dll: build/mod_recompiled.c
+	clang-cl build/mod_recompiled.c -fuse-ld=lld -Z7 /Ioffline_build   /MD /O2 /link /DLL /OUT:$@
+
+else
+
+define make_folder
+	mkdir -p $(1)
+endef
+
+$(OUTPUT_NAME_W_VER).so: build/mod_recompiled.c
+	clang build/mod_recompiled.c -shared -fvisibility=hidden -fPIC -O2 -Ioffline_build -o $@
+
+endif
+
+
+build/mod_recompiled.c: $(OUTPUT_NAME)/mod_binary.bin
+	$(OFFLINE_RECOMP) $(OUTPUT_NAME)/mod_syms.bin $(OUTPUT_NAME)/mod_binary.bin Zelda64RecompSyms/mm.us.rev1.syms.toml $@
+ifeq ($(OUTPUT_NAME_W_VER),)
+	@$(MAKE) --no-print-directory
+endif
+
+$(OUTPUT_NAME)/mod_binary.bin: $(TARGET) $(MOD_TOML) | $(OUTPUT_NAME)
+	$(MOD_TOOL) $(MOD_TOML) $(OUTPUT_NAME)
+
+$(OUTPUT_NAME):
+	$(call make_folder, $@)
+
+$(TARGET): $(C_OBJS) $(LDSCRIPT)  | $(BUILD_DIR)
 	$(LD) $(C_OBJS) $(LDFLAGS) -o $@
 
 $(BUILD_DIR) $(BUILD_DIR)/src:
-ifeq ($(OS),Windows_NT)
-	mkdir $(subst /,\,$@)
-else
-	mkdir -p $@
-endif
+	$(call make_folder, $@)
 
 $(C_OBJS): $(BUILD_DIR)/%.o : %.c | $(BUILD_DIR) $(BUILD_DIR)/src
 	$(CC) $(CFLAGS) $(CPPFLAGS) $< -MMD -MF $(@:.o=.d) -c -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) $(OUTPUT_NAME)
 
 -include $(C_DEPS)
 
