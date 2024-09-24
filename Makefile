@@ -1,4 +1,5 @@
 BUILD_DIR := build
+LIB_DIRS := lib
 OUTPUT_NAME := mm_recomp_rando
 MOD_TOML := mod.toml
 
@@ -9,6 +10,8 @@ OFFLINE_RECOMP := ./OfflineModRecomp
 TARGET  := $(BUILD_DIR)/mod.elf
 MANIFEST := $(wildcard $(OUTPUT_NAME)/$(OUTPUT_NAME)*.nrm)
 OUTPUT_NAME_W_VER := $(notdir $(MANIFEST:.nrm=))
+
+LIBFILES := $(foreach ld, $(LIB_DIRS), $(wildcard $(ld)/*.dll))
 
 LDSCRIPT := mod.ld
 CFLAGS   := -target mips -mips2 -mabi=32 -O2 -G0 -mno-abicalls -mno-odd-spreg -mno-check-zero-division \
@@ -23,6 +26,9 @@ C_OBJS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.o))
 C_DEPS := $(addprefix $(BUILD_DIR)/, $(C_SRCS:.c=.d))
 
 
+$(OUTPUT_NAME)/mod_binary.bin: $(TARGET) $(MOD_TOML) $(LIBFILES) | $(OUTPUT_NAME)
+	$(MOD_TOOL) $(MOD_TOML) $(OUTPUT_NAME)
+
 ifeq ($(OS),Windows_NT)
 
 define make_folder
@@ -31,10 +37,12 @@ endef
 
 $(OUTPUT_NAME)/$(OUTPUT_NAME_W_VER).dll: build/mod_recompiled.c
 ifeq ($(MANIFEST),)
-	@$(MAKE) --no-print-directory
+	@$(MAKE) offline --no-print-directory
 else
-	clang-cl build/mod_recompiled.c -fuse-ld=lld -Z7 /Ioffline_build   /MD /O2 /link /DLL /OUT:$@
+	clang-cl build/mod_recompiled.c -Wno-macro-redefined -fuse-ld=lld -Z7 /Ioffline_build -MD -O2 /link /DLL /OUT:$@
 endif
+
+offline: $(OUTPUT_NAME)/$(OUTPUT_NAME_W_VER).dll
 
 else
 
@@ -44,10 +52,12 @@ endef
 
 $(OUTPUT_NAME)/$(OUTPUT_NAME_W_VER).so: build/mod_recompiled.c
 ifeq ($(MANIFEST),)
-	@$(MAKE) --no-print-directory
+	@$(MAKE) offline --no-print-directory
 else
-	clang build/mod_recompiled.c -shared -fvisibility=hidden -fPIC -O2 -Ioffline_build -o $@
+	clang build/mod_recompiled.c -Wno-macro-redefined -shared -fvisibility=hidden -fPIC -O2 -Ioffline_build -o $@
 endif
+
+offline: $(OUTPUT_NAME)/$(OUTPUT_NAME_W_VER).so
 
 endif
 
@@ -55,13 +65,10 @@ endif
 build/mod_recompiled.c: $(OUTPUT_NAME)/mod_binary.bin
 	$(OFFLINE_RECOMP) $(OUTPUT_NAME)/mod_syms.bin $(OUTPUT_NAME)/mod_binary.bin Zelda64RecompSyms/mm.us.rev1.syms.toml $@
 
-$(OUTPUT_NAME)/mod_binary.bin: $(TARGET) $(MOD_TOML) | $(OUTPUT_NAME)
-	$(MOD_TOOL) $(MOD_TOML) $(OUTPUT_NAME)
-
 $(OUTPUT_NAME):
 	$(call make_folder, $@)
 
-$(TARGET): $(C_OBJS) $(LDSCRIPT)  | $(BUILD_DIR)
+$(TARGET): $(C_OBJS) $(LDSCRIPT) | $(BUILD_DIR)
 	$(LD) $(C_OBJS) $(LDFLAGS) -o $@
 
 $(BUILD_DIR) $(BUILD_DIR)/src:

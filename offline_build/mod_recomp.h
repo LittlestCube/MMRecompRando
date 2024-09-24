@@ -262,14 +262,13 @@ typedef struct {
 extern "C" {
 #endif
 
-void cop0_status_write(recomp_context* ctx, gpr value);
-gpr cop0_status_read(recomp_context* ctx);
-void switch_error(const char* func, uint32_t vram, uint32_t jtbl);
-void do_break(uint32_t vram);
-
 typedef void (recomp_func_t)(uint8_t* rdram, recomp_context* ctx);
 
-RECOMP_EXPORT recomp_func_t* (*get_function)(int32_t vram);
+extern RECOMP_EXPORT recomp_func_t* (*get_function)(int32_t vram);
+extern RECOMP_EXPORT void (*cop0_status_write)(recomp_context* ctx, gpr value);
+extern RECOMP_EXPORT gpr (*cop0_status_read)(recomp_context* ctx);
+extern RECOMP_EXPORT void (*switch_error)(const char* func, uint32_t vram, uint32_t jtbl);
+extern RECOMP_EXPORT void (*do_break)(uint32_t vram);
 
 #define LOOKUP_FUNC(val) \
     get_function((int32_t)(val))

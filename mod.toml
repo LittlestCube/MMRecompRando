@@ -27,8 +27,17 @@ dependencies = [
 
 # Native libraries (e.g. DLLs) and the functions they export.
 native_libraries = [
-# Example native library:
-#    { name = "my_native_library", funcs = ["my_native_library_function"] }
+# APCpp Glue:
+    { name = "APCpp-Glue", funcs = ["rando_location_is_checked",
+                                    "rando_get_death_link_pending",
+                                    "rando_reset_death_link_pending",
+                                    "rando_get_death_link_enabled",
+                                    "rando_send_death_link",
+                                    "rando_get_item_id",
+                                    "rando_send_location",
+                                    "rando_has_item",
+                                    "rando_get_items_size",
+                                    "rando_get_item"] }
 ]
 
 # Inputs to the mod tool.
