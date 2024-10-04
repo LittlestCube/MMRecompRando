@@ -3,9 +3,23 @@
 
 #include "apcommon.h"
 
+RECOMP_IMPORT("*", int recomp_printf(const char* fmt, ...));
+RECOMP_IMPORT("*", int recomp_set_moon_crash_resets_save(bool new_val));
+
 RECOMP_IMPORT(".", void rando_init());
 
+RECOMP_IMPORT("better_double_sot", void dsot_set_skip_dsot_cutscene(bool new_val));
+
 PlayState* gPlay;
+
+RECOMP_CALLBACK("*", recomp_on_init)
+void call_rando_init()
+{
+    rando_init();
+
+    recomp_set_moon_crash_resets_save(false);
+    dsot_set_skip_dsot_cutscene(true);
+}
 
 s8 giToItemId[GI_MAX] = {
     0x00,
@@ -205,7 +219,35 @@ u32 old_items_size;
 bool waiting_death_link = false;
 bool sending_death_link = false;
 
-RECOMP_CALLBACK("*", rando_on_play_main)
+/**
+ * @return false if player is out of health
+ */
+RECOMP_PATCH s32 Health_ChangeBy(PlayState* play, s16 healthChange) {
+    if (healthChange > 0) {
+        Audio_PlaySfx(NA_SE_SY_HP_RECOVER);
+    } else if (gSaveContext.save.saveInfo.playerData.doubleDefense && (healthChange < 0)) {
+        healthChange >>= 1;
+    }
+
+    gSaveContext.save.saveInfo.playerData.health += healthChange;
+
+    if (((void)0, gSaveContext.save.saveInfo.playerData.health) >
+        ((void)0, gSaveContext.save.saveInfo.playerData.healthCapacity)) {
+        gSaveContext.save.saveInfo.playerData.health = gSaveContext.save.saveInfo.playerData.healthCapacity;
+    }
+
+    if (gSaveContext.save.saveInfo.playerData.health <= 0) {
+        gSaveContext.save.saveInfo.playerData.health = 0;
+        if (rando_get_death_link_enabled()) {
+            rando_send_death_link();
+        }
+        return false;
+    } else {
+        return true;
+    }
+}
+
+RECOMP_CALLBACK("*", recomp_on_play_main)
 void update_rando(PlayState* play) {
     u32 new_items_size;
     u32 i;
@@ -217,8 +259,6 @@ void update_rando(PlayState* play) {
         new_items_size = rando_get_items_size();
 
         if (!initItems) {
-            rando_init();
-
             u8 new_bow_level = rando_has_item(GI_QUIVER_30);
             u8 new_bomb_level = rando_has_item(GI_BOMB_BAG_20);
             u8 new_wallet_level = rando_has_item(GI_WALLET_ADULT);
@@ -326,21 +366,8 @@ void update_rando(PlayState* play) {
             old_items_size = new_items_size;
         }
 
-        if (rando_get_death_link_enabled()) {
-            if (rando_get_death_link_pending() && play->pauseCtx.state == 0) {
-                if (!waiting_death_link) {
-                    Play_KillPlayer();
-                    waiting_death_link = true;
-                } else if (gSaveContext.save.saveInfo.playerData.health > 0) {
-                    rando_reset_death_link_pending();
-                    waiting_death_link = false;
-                }
-            } else if (!waiting_death_link && !sending_death_link && gSaveContext.save.saveInfo.playerData.health == 0) {
-                rando_send_death_link();
-                sending_death_link = true;
-            } else if (sending_death_link && gSaveContext.save.saveInfo.playerData.health > 0) {
-                sending_death_link = false;
-            }
+        if (rando_get_death_link_enabled() && rando_get_death_link_pending() && play->pauseCtx.state == 0) {
+            Play_KillPlayer();
         }
     }
 }

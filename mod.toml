@@ -21,20 +21,23 @@ minimum_recomp_version = "1.2.0"
 
 # Dependency mods. Each entry is the mod's ID and then an optional minimum version of the dependency mod.
 dependencies = [
-# Example dependency:
-#    "modname:1.0.0"
+    "owls_never_quit:1.0.0",
+    "better_double_sot:0.0.1"
 ]
 
 # Native libraries (e.g. DLLs) and the functions they export.
 native_libraries = [
 # APCpp Glue:
-    { name = "APCpp-Glue", funcs = ["rando_location_is_checked",
+    { name = "APCpp-Glue", funcs = ["rando_init",
+                                    "rando_location_is_checked",
                                     "rando_get_death_link_pending",
                                     "rando_reset_death_link_pending",
                                     "rando_get_death_link_enabled",
                                     "rando_send_death_link",
+                                    "rando_skulltulas_enabled",
                                     "rando_get_item_id",
                                     "rando_send_location",
+                                    "rando_complete_goal",
                                     "rando_has_item",
                                     "rando_get_items_size",
                                     "rando_get_item"] }
